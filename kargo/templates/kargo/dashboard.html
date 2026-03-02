@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Yönetici Paneli - Lojistik Analiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 30px; background-color: #f0f2f5; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .chart-box { margin-bottom: 50px; height: 300px; width: 100%; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { text-decoration: none; background: #2c3e50; color: white; padding: 8px 16px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Lojistik Analiz Dashboard</h1>
+            <a href="{% url 'optimisation_view' %}" class="btn">Geri Dön</a>
+        </div>
+
+        <h3>Rota Başına Maliyet Analizi</h3>
+        <div class="chart-box">
+            <canvas id="maliyetChart"></canvas>
+        </div>
+
+        <hr>
+
+        <h3>Kat Edilen Mesafeler (KM)</h3>
+        <div class="chart-box">
+            <canvas id="mesafeChart"></canvas>
+        </div>
+    </div>
+
+    <script id="data-labels" type="application/json">[{% for r in rotalar %}"Rota {{ r.id }}"{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+    <script id="data-maliyet" type="application/json">[{% for r in rotalar %}{{ r.toplam_maliyet }}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+    <script id="data-mesafe" type="application/json">[{% for r in rotalar %}{{ r.toplam_mesafe_km }}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+
+    <script>
+        // Verileri JSON olarak çekiyoruz (VS Code hata vermemesi için en güvenli yol)
+        const labels = JSON.parse(document.getElementById('data-labels').textContent);
+        const maliyetData = JSON.parse(document.getElementById('data-maliyet').textContent);
+        const mesafeData = JSON.parse(document.getElementById('data-mesafe').textContent);
+
+        new Chart(document.getElementById('maliyetChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Toplam Maliyet (Birim)',
+                    data: maliyetData,
+                    backgroundColor: 'rgba(52, 152, 219, 0.8)'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('mesafeChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Mesafe (KM)',
+                    data: mesafeData,
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    fill: true
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kargo Rota Optimizasyonu (Yönetici)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f0f2f5; color: #333; }
+        
+        /* Genel Linkler */
+        .nav-links { margin-bottom: 20px; display: flex; gap: 15px; }
+        .nav-links a { text-decoration: none; color: #2c3e50; font-weight: 600; padding: 10px 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; }
+        .nav-links a:hover { background: #e2e8f0; color: #3182ce; }
+
+        /* Form Kutuları */
+        .form-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border-left: 6px solid #27ae60; /* Yeşil Çizgi */
+        }
+
+        .optimize-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border-left: 6px solid #2980b9; /* Mavi Çizgi */
+        }
+
+        h2, h3 { margin-top: 0; color: #2c3e50; }
+        
+        .form-grid { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568; }
+        .form-group select, .form-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
+        
+        button { padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; color: white; }
+        .btn-save { background-color: #27ae60; }
+        .btn-save:hover { background-color: #219150; }
+        .btn-optimize { background-color: #2980b9; width: 100%; font-size: 1.1em; margin-top: 15px; }
+        .btn-optimize:hover { background-color: #1a5276; }
+
+        /* Radio Button Tasarımı */
+        .radio-group { background: #f7fafc; padding: 15px; border-radius: 8px; border: 1px solid #edf2f7; margin-bottom: 15px; }
+        .radio-option { display: flex; align-items: center; cursor: pointer; margin-bottom: 10px; font-weight: 500; }
+        .radio-option input { width: auto; margin-right: 10px; cursor: pointer; }
+        .hint { font-size: 0.85em; color: #718096; margin-left: 25px; font-style: italic; }
+
+        /* Checkbox Tasarımı (YENİ EKLENDİ) */
+        .checkbox-container {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff3cd; /* Sarı uyarı rengi */
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #856404;
+            font-weight: bold;
+        }
+        .checkbox-label input {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        /* Tablo ve Harita */
+        .map-container { width: 100%; height: 550px; margin: 20px 0; border: 2px solid #cbd5e0; border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #edf2f7; color: #2d3748; font-weight: 700; }
+        tr:hover { background-color: #f7fafc; }
+
+        /* Mesajlar */
+        .messages { margin: 20px 0; }
+        .success { background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 6px; border: 1px solid #9ae6b4; }
+        .info { background: #bee3f8; color: #2c5282; padding: 15px; border-radius: 6px; border: 1px solid #90cdf4; }
+        .warning { background: #feebc8; color: #744210; padding: 15px; border-radius: 6px; border: 1px solid #fbd38d; }
+        
+        .rota-detay { font-size: 0.9em; color: #4a5568; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="margin: 0; color: #2c3e50;">🚀 Kargo Operasyon Merkezi</h1>
+        <div class="nav-links">
+            <a href="/admin/">⚙️ Yönetici Paneli</a>
+            <a href="{% url 'dashboard_view' %}">📊 Analiz Dashboard</a>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>📦 Hızlı Kargo Girişi (Admin)</h3>
+        <form method="post" class="form-grid">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="kargo_ekle">
+            
+            <div class="form-group">
+                <label>📍 İstasyon Seçin:</label>
+                <select name="istasyon_id" required>
+                    <option value="">-- İstasyon Listesi --</option>
+                    {% for ist in istasyonlar %}
+                        <option value="{{ ist.id }}">{{ ist.ad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>⚖️ Ağırlık (kg):</label>
+                <input type="number" name="agirlik" required min="1" placeholder="Örn: 150">
+            </div>
+
+            <button type="submit" class="btn-save">Sisteme Ekle</button>
+        </form>
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+        {% for message in messages %}
+            <div class="{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="optimize-section">
+        <h3>🧠 Rota Planlama ve Yapay Zeka</h3>
+        <form method="post" action="{% url 'optimisation_view' %}"> {% csrf_token %}
+            <input type="hidden" name="action" value="optimize">
+            
+            <div class="radio-group">
+                <label style="display:block; margin-bottom:10px; font-weight:bold; color:#2c3e50;">🎯 Optimizasyon Hedefi Seçin:</label>
+                
+                <label class="radio-option">
+                    <input type="radio" name="optimizasyon_turu" value="agirlik" checked> 
+                    🏋️ Maksimum Ağırlık (Önce Ağır Yükleri Taşı)
+                </label>
+                <div class="hint">Büyük kargoları önceliklendirir. Kapasiteyi ağırlık olarak doldurur.</div>
+                
+                <br>
+
+                <label class="radio-option">
+                    <input type="radio" name="optimizasyon_turu" value="adet"> 
+                    📦 Maksimum Adet (Önce Küçük Paketleri Taşı)
+                </label>
+                <div class="hint">Daha fazla sayıda müşteriye hizmet vermek için küçük paketleri öne alır.</div>
+            </div>
+
+            <div class="checkbox-container">
+                <label class="checkbox-label" for="kiralamaCheck">
+                    <input type="checkbox" name="kiralama_yasak" id="kiralamaCheck">
+                    🚫 Sınırlı Araç Modu (Araç Kiralama Yasak)
+                </label>
+                <div style="font-size: 0.85em; color: #856404; margin-left: 30px; margin-top: 5px;">
+                    Bu seçenek işaretlenirse, sistem <strong>kiralık araç (34 KRL...)</strong> oluşturmaz. 
+                    Mevcut filo dolduğunda kalan kargoları "Beklemeye" alır.
+                </div>
+            </div>
+            <button type="submit" class="btn-optimize">⚡ Rota Optimizasyonunu Başlat</button>
+        </form>
+    </div>
+
+    <hr style="border: 0; border-top: 2px solid #e2e8f0; margin: 30px 0;">
+
+    <h2>🗺️ Optimizasyon Sonuçları</h2>
+
+    {% if rotalar %}
+        <div style="background: #ebf8ff; padding: 15px; border-radius: 8px; border: 1px solid #bee3f8; margin-bottom: 20px; font-weight: bold; color: #2b6cb0;">
+            💰 Toplam Operasyon Maliyeti: {{ toplam_maliyet|floatformat:2 }} Birim
+        </div>
+
+        <div class="map-container">
+            {{ map_html|safe }}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Rota ID</th>
+                    <th>Araç Plakası (Kapasite)</th>
+                    <th>Toplam Mesafe</th>
+                    <th>Maliyet</th>
+                    <th>Ziyaret Sırası (Güzergah)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rota in rotalar %}
+                <tr>
+                    <td><strong>#{{ rota.id }}</strong></td>
+                    <td>{{ rota.arac.plaka }} <span style="font-size:0.8em; color:#718096;">({{ rota.arac.kapasite_kg }} kg)</span></td>
+                    <td>{{ rota.toplam_mesafe_km|floatformat:2 }} km</td>
+                    <td>{{ rota.toplam_maliyet|floatformat:2 }} Birim</td>
+                    <td>
+                        <div class="rota-detay">
+                            <span style="color: green;">● Başlangıç (İzmit)</span>
+                            {% for detay in rota.detaylar.all %} 
+                                &rarr; <strong>{{ detay.istasyon.ad }}</strong>
+                            {% endfor %}
+                            <span style="color: red;">&rarr; ● Bitiş (İzmit)</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 40px; color: #718096; background: white; border-radius: 8px;">
+            ⚠️ Henüz hesaplanmış bir rota yok. Yukarıdan "Optimizasyonu Başlat" butonuna basınız.
+        </p>
+    {% endif %}
+
+    {% if kalan_kargolar %}
+        <div style="margin-top: 40px;">
+            <h3 style="color: #c53030;">⚠️ Bekleyen / Atanamayan Kargolar</h3>
+            <ul style="background: #fff5f5; padding: 20px; border-radius: 8px; border: 1px solid #fed7d7; list-style: none;">
+                {% for kargo in kalan_kargolar %}
+                    <li style="margin-bottom: 10px; border-bottom: 1px solid #fee2e2; padding-bottom: 5px;">
+                        🔴 <strong>ID: {{ kargo.id }}</strong> - 
+                        {{ kargo.kaynak_istasyon.ad }} İstasyonu - 
+                        <strong>{{ kargo.agirlik_kg }} kg</strong>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+</body>
+</html>

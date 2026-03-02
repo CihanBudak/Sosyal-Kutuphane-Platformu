@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Personel Paneli</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        /* Başlık ve Çıkış Butonu Hizalaması */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 25px; }
+        h2 { margin: 0; color: #2c3e50; }
+        
+        /* Çıkış Butonu Tasarımı */
+        .logout-btn { background-color: #e74c3c; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
+        .logout-btn:hover { background-color: #c0392b; }
+
+        .panel-grid { display: flex; gap: 30px; margin-bottom: 30px; }
+        .panel-box { flex: 1; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; }
+        h3 { margin-top: 0; color: #34495e; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
+        .btn-ekle { background-color: #27ae60; }
+        .btn-sorgula { background-color: #2980b9; }
+        
+        .map-container { margin-top: 20px; border: 3px solid #3498db; border-radius: 8px; overflow: hidden; height: 450px; }
+        .message { padding: 12px; margin-bottom: 20px; border-radius: 6px; text-align: center; font-weight: bold; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .admin-link { display: block; text-align: center; margin-top: 30px; color: #95a5a6; text-decoration: none; }
+        .user-info { font-size: 0.9em; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h2>📦 İstasyon Personel Paneli</h2>
+            <span class="user-info">Kullanıcı: <strong>{{ user.username }}</strong></span>
+        </div>
+        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Çıkış Yap 🚪</button>
+        </form>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="panel-grid">
+        <div class="panel-box">
+            <h3>📝 Yeni Kargo Kaydı</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="kargo_ekle">
+                <label>📍 İstasyon Seçin:</label>
+                <select name="istasyon_id" required>
+                    <option value="">-- İstasyon Listesi --</option>
+                    {% for ist in istasyonlar %}
+                        <option value="{{ ist.id }}">{{ ist.ad }}</option>
+                    {% endfor %}
+                </select>
+                <label>⚖️ Ağırlık (kg):</label>
+                <input type="number" name="agirlik" placeholder="Örn: 150" required min="1">
+                <button type="submit" class="btn-ekle">Sisteme Kaydet</button>
+            </form>
+        </div>
+
+        <div class="panel-box">
+            <h3>🔍 Kargo Takip & Rota</h3>
+            <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">Size ait kargonun rotası için ID giriniz.</p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="kargo_sorgula">
+                <label>🎫 Kargo Takip No (ID):</label>
+                <input type="number" name="kargo_id" placeholder="Örn: 42" required>
+                <button type="submit" class="btn-sorgula">Rotayı Göster</button>
+            </form>
+        </div>
+    </div>
+
+    {% if map_html %}
+        <div style="margin-top: 30px;">
+            <h3 style="text-align: center; color: #2980b9;">🚚 Kargo ID: {{ aranan_kargo.id }} - Güzergah Bilgisi</h3>
+            <div class="map-container">{{ map_html|safe }}</div>
+        </div>
+    {% endif %}
+
+    {% if user.is_superuser %}
+        <a href="{% url 'optimisation_view' %}" class="admin-link">🔐 Yönetici Paneline Geçiş (Sadece Admin)</a>
+    {% endif %}
+</div>
+
+</body>
+</html>
